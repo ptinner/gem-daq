@@ -187,7 +187,8 @@ class gemTreeWriter {
           uint16_t  CRC    = vfat.crc;
           uint64_t  lsData = vfat.lsData;
           uint64_t  msData = vfat.msData;
-          BX     = vfat.BXfrOH;  
+          //BX     = vfat.BXfrOH;  
+          BX = ((0x000000ff & EC) << 24) | BC;
           setVFATBlockWords(vfat);
           gem::datachecker::GEMDataChecker *dc = new gem::datachecker::GEMDataChecker::GEMDataChecker();
           uint16_t CRC_calc = dc->checkCRC(vfatBlockWords, 0);
@@ -244,10 +245,14 @@ class gemTreeWriter {
           if(!gem::readout::GEMDataAMCformat::readGEMtr1Binary(inpf, gem)) break;
         }
         
+        if (DEBUG) std::cout << "[gemTreeWriter]: Create AMC" << std::endl;
+        AMCdata *AMCdata_ = new AMCdata(0,0,0,BX,0,0,0,0,0,0,0,0,0,0,0,0,0,0);
+        AMCdata_->addGEBdata(*GEBdata_);
         if (DEBUG) std::cout << "[gemTreeWriter]: Build event" << std::endl;
-        ev->Build(0,0,0,BX,0,0,0,0,0,0,0,0,0,0,0,0,0,0, eventStatus);
+        ev->Build(eventStatus);
+        ev->SetHeader(ievent, 0, 0);
         if (DEBUG) std::cout << "[gemTreeWriter]: Event built" << std::endl;
-        ev->addGEBdata(*GEBdata_);
+        ev->addAMCdata(*AMCdata_);
         if (DEBUG) std::cout << "[gemTreeWriter]: GEB data added" << std::endl;
         GEMtree.Fill();
         if (DEBUG) std::cout << "[gemTreeWriter]: Fill TTree" << std::endl;
